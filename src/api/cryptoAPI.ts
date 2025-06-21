@@ -1,6 +1,5 @@
 const UPBIT_API_URL = 'https://api.upbit.com/v1/ticker?markets=KRW-BTC';
 const BINANCE_API_URL = 'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT';
-const EXCHANGE_RATE_API_URL = 'https://quotation-api-cdn.dunamu.com/v1/forex/recent?codes=FRX.KRWUSD';
 
 /**
  * 업비트에서 현재 비트코인 KRW 가격을 가져옵니다.

@@ -2,9 +2,9 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Button, StyleSheet, Text, View } from 'react-native';
 import {
-    fetchBinancePrice,
-    fetchUpbitPrice,
-    getExchangeRate,
+  fetchBinancePrice,
+  fetchUpbitPrice,
+  getExchangeRate
 } from '../src/api/cryptoAPI';
 
 export default function HomeScreen() {
