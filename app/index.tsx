@@ -1,7 +1,10 @@
+import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -10,8 +13,17 @@ import {
 import {
   fetchBinancePrice,
   fetchUpbitPrice,
-  getExchangeRate
+  getExchangeRate,
 } from '../src/api/cryptoAPI';
+
+// 1. 알림 핸들러 설정 (앱이 실행 중일 때도 알림을 표시)
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
 export default function HomeScreen() {
   const [upbitPrice, setUpbitPrice] = useState<number | null>(null);
@@ -20,20 +32,64 @@ export default function HomeScreen() {
   const [kimchiPremium, setKimchiPremium] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const notificationListener = useRef<Notifications.Subscription>();
+  const responseListener = useRef<Notifications.Subscription>();
+
+  // 2. 알림 보내는 함수
+  const schedulePushNotification = async (premium: string) => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "김치 프리미엄 업데이트 🚀",
+        body: `현재 김치 프리미엄은 ${premium}% 입니다.`,
+      },
+      trigger: null, // 즉시 발송
+    });
+  }
+
+  // 3. 알림 권한 요청 함수
+  const registerForPushNotificationsAsync = async () => {
+    let token;
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== 'granted') {
+      Alert.alert('알림 권한이 거부되었습니다!', '알림 기능을 사용하려면 설정에서 권한을 허용해주세요.');
+      return;
+    }
+  }
 
   const calculatePremium = (krw: number, usd: number, rate: number) => {
     if (krw && usd && rate) {
-      const premium = ((krw / (usd * rate)) - 1) * 100;
-      setKimchiPremium(premium.toFixed(2)); // 소수점 2자리까지 표시
+      const premium = (((krw / (usd * rate)) - 1) * 100).toFixed(2);
+      setKimchiPremium(premium);
+      // 4. 프리미엄 계산 후 알림 호출
+      schedulePushNotification(premium);
     }
   };
 
   const loadData = async () => {
+    // 최초 로딩 시에만 로딩 인디케이터 표시
+    if (loading) {
+        // 이 부분은 그대로 두어 최초 실행 시에만 true가 되도록 함
+    } else {
+        // 자동 갱신 시에는 백그라운드에서 조용히 실행
+    }
+    
     try {
-      setLoading(true);
       setError(null);
-
-      // 모든 데이터를 동시에 가져옵니다.
       const [krw, usd, rate] = await Promise.all([
         fetchUpbitPrice(),
         fetchBinancePrice(),
@@ -43,19 +99,28 @@ export default function HomeScreen() {
       setUpbitPrice(krw);
       setBinancePrice(usd);
       setExchangeRate(rate);
-
       calculatePremium(krw, usd, rate);
-
     } catch (e) {
       setError('데이터를 불러오는 데 실패했습니다.');
       console.error(e);
     } finally {
-      setLoading(false);
+      if(loading) setLoading(false);
     }
   };
 
   useEffect(() => {
+    // 5. 앱 시작 시 알림 권한 요청 및 초기 데이터 로드
+    registerForPushNotificationsAsync();
     loadData();
+
+    // 6. 3분(180000ms)마다 자동 갱신 설정
+    const interval = setInterval(() => {
+      console.log("3분마다 데이터 자동 갱신 실행");
+      loadData();
+    }, 180000);
+
+    // 7. 컴포넌트가 사라질 때 인터벌 정리 (메모리 누수 방지)
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {
