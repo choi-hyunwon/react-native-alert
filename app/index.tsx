@@ -1,6 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -32,9 +32,6 @@ export default function HomeScreen() {
   const [kimchiPremium, setKimchiPremium] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
 
   // 2. 알림 보내는 함수
   const schedulePushNotification = async (premium: string) => {
