@@ -1,6 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Button, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {
   fetchBinancePrice,
   fetchUpbitPrice,
@@ -90,7 +96,12 @@ export default function HomeScreen() {
       )}
 
       <View style={styles.buttonContainer}>
-        <Button title="새로고침" onPress={loadData} disabled={loading} />
+        <TouchableOpacity
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={loadData}
+          disabled={loading}>
+          <Text style={styles.buttonText}>새로고침</Text>
+        </TouchableOpacity>
       </View>
 
       <StatusBar style="auto" />
@@ -151,5 +162,29 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginTop: 40,
+    width: '80%',
+  },
+  button: {
+    backgroundColor: '#6200EE',
+    paddingVertical: 15,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  buttonDisabled: {
+    backgroundColor: '#a9a9a9',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
